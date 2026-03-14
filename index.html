@@ -1,250 +1,191 @@
-import React, { useState } from 'react';
-import { Clock, Mic, DollarSign, Leaf, Target, Info, Globe, MessageCircle, CheckCircle } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>永續食農與循環經濟專案總覽</title>
+  
+  <!-- 載入 Tailwind CSS (排版與顏色) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 載入 React (核心功能) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- 載入 Babel (瀏覽器即時編譯 JSX) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-50">
+  <div id="root"></div>
 
-// 定義所有報名狀態的選項與樣式
-const allStatuses = [
-  { id: 'individual', label: '開放個人報名', activeDot: 'bg-green-500', activeBg: 'bg-green-100', activeText: 'text-green-700' },
-  { id: 'group', label: '開放團體報名', activeDot: 'bg-blue-500', activeBg: 'bg-blue-100', activeText: 'text-blue-700' },
-  { id: 'enterprise', label: '開放企業報名', activeDot: 'bg-purple-500', activeBg: 'bg-purple-100', activeText: 'text-purple-700' },
-  { id: 'onsite', label: '接受到達機關/企業指定地點辦理', activeDot: 'bg-indigo-500', activeBg: 'bg-indigo-100', activeText: 'text-indigo-700' },
-  { id: 'suspended', label: '暫停報名', activeDot: 'bg-red-500', activeBg: 'bg-red-100', activeText: 'text-red-700', noPulse: true }
-];
+  <script type="text/babel">
+    const { useState } = React;
 
-// 整合 10 張圖片的專案資訊 (靜態型錄資料，若要改燈號請直接修改此處的 activeStatuses)
-const projectsData = [
-  {
-    id: 'A1', code: 'A1', title: '可食花藝供品盆栽', enTitle: 'Edible Flower Arrangement',
-    concept: '惜食精神。在地當季蔬果・蜂蜜生吐司基底・滿滿心意・活動後可食用。',
-    specs: '室內 | 2小時 | 30人/場', instructor: '黃志揚 (儲備: 陳宏瑋、范振育)', cost: '材料費 $450/人 | 講師費 $2,000/時',
-    esg: ['SDG 2 (消除飢餓)', 'GRI 306'], color: 'bg-rose-50 border-rose-200', iconColor: 'text-rose-500', badgeColor: 'bg-rose-100 text-rose-700',
-    activeStatuses: ['enterprise', 'group', 'onsite']
-  },
-  {
-    id: 'A4', code: 'A4', title: '森林繫香氛木畫', enTitle: 'Forest Aroma Wood Art',
-    concept: '森林固碳。利用修枝廢材進行創作，結合精油體驗。',
-    specs: '室內 | 2小時 | 30人/場', instructor: '林裕翔 (儲備: 陳宏瑋、梁維軒)', cost: '材料費 $250/人 | 講師費 $2,000/時',
-    esg: ['SDG 15 (陸域生態)', 'GRI 301 (循環物料)'], color: 'bg-amber-50 border-amber-200', iconColor: 'text-amber-600', badgeColor: 'bg-amber-100 text-amber-700',
-    activeStatuses: ['individual', 'group', 'enterprise', 'onsite']
-  },
-  {
-    id: 'A5', code: 'A5', title: '葉脈包裝巧克力', enTitle: 'Leaf Vein Packaging',
-    concept: '減塑設計。利用天然葉脈取代塑膠包裝，探討產品生命週期。',
-    specs: '室內 | 2小時 | 30人/場', instructor: '張玉華', cost: '材料費 $350/人 | 講師費 $2,000/時',
-    esg: ['SDG 12 (責任消費)', 'GRI 306 (廢棄物減量)'], color: 'bg-orange-50 border-orange-200', iconColor: 'text-orange-600', badgeColor: 'bg-orange-100 text-orange-700',
-    activeStatuses: ['individual']
-  },
-  {
-    id: 'A6', code: 'A6', title: '地下探險：土壤生態學習', enTitle: 'Soil Ecology Exploration',
-    concept: '微觀生態。透過試管DIY活動認識土壤層及土壤生成，標示及學習生態活動及環境影響。',
-    specs: '室內 | 2小時 | 30人/場 (需自備手機)', instructor: '梁維軒、陳宏瑋 (儲備: 林裕翔)', cost: '材料費 $350/人 | 講師費 $2,000/時',
-    esg: ['SDG 15 (陸域生態)', 'GRI 304 (生物多樣性)'], color: 'bg-stone-50 border-stone-200', iconColor: 'text-stone-600', badgeColor: 'bg-stone-100 text-stone-700',
-    activeStatuses: ['enterprise']
-  },
-  {
-    id: 'B1', code: 'B1', title: '里山食農下午茶講堂', enTitle: 'Satoyama High Tea',
-    concept: '產地餐桌・在地食材・食農小講堂・手作茶點。',
-    specs: '室內 | 3小時 | 30人/場', instructor: '陳宏瑋、范振育、連宴瑩、黃志揚等', cost: '材料費 $900/人 | 講師費另計',
-    esg: ['SDG 3 (健康福祉)', 'GRI 204 (在地採購)'], color: 'bg-lime-50 border-lime-200', iconColor: 'text-lime-600', badgeColor: 'bg-lime-100 text-lime-700',
-    activeStatuses: ['suspended']
-  },
-  {
-    id: 'B2', code: 'B2', title: '殼殼蘭藝', enTitle: 'Shell Orchid Art',
-    concept: '借鏡亞馬遜雨林，將觀賞蘭、檸檬、花生種植的氮及介質利用形成一個有利的循環。',
-    specs: '室內 | 2小時 | 30人/場', instructor: '范振育', cost: '材料費 $450/人 | 講師費 $2,000/時',
-    esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-emerald-50 border-emerald-200', iconColor: 'text-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-700',
-    activeStatuses: ['group', 'enterprise']
-  },
-  {
-    id: 'B5-1', code: 'B5', title: '好吃香草蘭掛藝', enTitle: 'Vanilla Hanging Art',
-    concept: '利用香草梳枝(芽)廢棄物，開發成掛式紓壓植栽。',
-    specs: '室內 | 2小時 | 30人/場', instructor: '胡博信', cost: '材料費 $350/人 | 講師費 $2,000/時',
-    esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-green-50 border-green-200', iconColor: 'text-green-600', badgeColor: 'bg-green-100 text-green-700',
-    activeStatuses: ['individual', 'group']
-  },
-  {
-    id: 'B5-2', code: 'B5', title: '金線連微循環懶人種植包', enTitle: 'Jewel Orchid Eco-Bottle',
-    concept: '辦公桌綠化紓壓小物。運用微循環原理免澆水，安全無毒可全株食用。',
-    specs: '室內 | 2小時 | 30人/場', instructor: '陳宏瑋、梁維軒、范振育、林裕翔', cost: '材料費 $300/人 | 講師費 $2,000/時',
-    esg: ['SDG 3 (心理健康)', 'GRI 403 (職場健康)'], color: 'bg-teal-50 border-teal-200', iconColor: 'text-teal-600', badgeColor: 'bg-teal-100 text-teal-700',
-    activeStatuses: ['enterprise']
-  },
-  {
-    id: 'B6', code: 'B6', title: '惜食酪梨烤布蕾', enTitle: 'Leftover Avocado Crème Brûlée',
-    concept: '利用格外品(醜蔬果)酪梨製作甜點，減少糧食浪費，響應 SDG 12.3。',
-    specs: '室內 | 2小時 | 30人/場', instructor: '林裕翔 (儲備: 陳宏瑋、梁維軒)', cost: '材料費 $200/人 | 講師費 $2,000/時',
-    esg: ['SDG 12.3 (減少糧食浪費)'], color: 'bg-yellow-50 border-yellow-200', iconColor: 'text-yellow-600', badgeColor: 'bg-yellow-100 text-yellow-700',
-    activeStatuses: ['suspended']
-  },
-  {
-    id: 'B10', code: 'B10', title: '真假蜂蜜搖一搖', enTitle: 'Honey Authenticity Lab',
-    concept: '食安教育。科學實驗分辨真假蜜，認識蜜蜂生態，國產蜂蜜與糧食安全。',
-    specs: '室內 | 2小時 | 30人/場', instructor: '黃志揚 (儲備: 陳宏瑋)', cost: '材料費 $220/人 | 講師費 $2,000/時',
-    esg: ['SDG 2 (消除飢餓)', 'GRI 416 (客戶食安)'], color: 'bg-amber-100 border-amber-300', iconColor: 'text-amber-600', badgeColor: 'bg-amber-200 text-amber-800',
-    activeStatuses: ['individual', 'group', 'enterprise', 'onsite']
-  }
-];
+    // --- 內建 SVG 圖示庫 (取代 lucide-react 以免除安裝) ---
+    const Icons = {
+      Clock: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+      Mic: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>,
+      DollarSign: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+      Leaf: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 22l10-10"/></svg>,
+      Target: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+      Globe: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+      Info: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+      MessageCircle: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+      CheckCircle: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    };
 
-export default function App() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [toastMessage, setToastMessage] = useState('');
+    // --- 資料設定區 ---
+    const allStatuses = [
+      { id: 'individual', label: '開放個人報名', activeDot: 'bg-green-500', activeBg: 'bg-green-100', activeText: 'text-green-700' },
+      { id: 'group', label: '開放團體報名', activeDot: 'bg-blue-500', activeBg: 'bg-blue-100', activeText: 'text-blue-700' },
+      { id: 'enterprise', label: '開放企業報名', activeDot: 'bg-purple-500', activeBg: 'bg-purple-100', activeText: 'text-purple-700' },
+      { id: 'onsite', label: '接受機關/企業指定地點', activeDot: 'bg-indigo-500', activeBg: 'bg-indigo-100', activeText: 'text-indigo-700' },
+      { id: 'suspended', label: '暫停報名', activeDot: 'bg-red-500', activeBg: 'bg-red-100', activeText: 'text-red-700', noPulse: true }
+    ];
 
-  // 處理點擊報名詢問 (Messenger 功能保留)
-  const handleInquiryClick = (project) => {
-    const textToCopy = `【課程報名詢問】\n🌱 專案代碼：${project.code}\n📌 專案名稱：${project.title}\n🎯 核心理念：${project.concept}\n⏱️ 規格：${project.specs}\n💰 費用：${project.cost}\n\n您好，我對上述課程非常有興趣，想進一步了解報名與包班細節！`;
-    
-    const textArea = document.createElement("textarea");
-    textArea.value = textToCopy;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textArea);
+    const projectsData = [
+      { id: 'A1', code: 'A1', title: '可食花藝供品盆栽', enTitle: 'Edible Flower Arrangement', concept: '惜食精神。在地當季蔬果・蜂蜜生吐司基底・滿滿心意・活動後可食用。', specs: '室內 | 2小時 | 30人/場', instructor: '黃志揚 (儲備: 陳宏瑋、范振育)', cost: '材料費 $450/人 | 講師費 $2,000/時', esg: ['SDG 2 (消除飢餓)', 'GRI 306'], color: 'bg-rose-50 border-rose-200', iconColor: 'text-rose-500', badgeColor: 'bg-rose-100 text-rose-700', activeStatuses: ['enterprise', 'group', 'onsite'] },
+      { id: 'A4', code: 'A4', title: '森林繫香氛木畫', enTitle: 'Forest Aroma Wood Art', concept: '森林固碳。利用修枝廢材進行創作，結合精油體驗。', specs: '室內 | 2小時 | 30人/場', instructor: '林裕翔 (儲備: 陳宏瑋、梁維軒)', cost: '材料費 $250/人 | 講師費 $2,000/時', esg: ['SDG 15 (陸域生態)', 'GRI 301 (循環物料)'], color: 'bg-amber-50 border-amber-200', iconColor: 'text-amber-600', badgeColor: 'bg-amber-100 text-amber-700', activeStatuses: ['individual', 'group', 'enterprise', 'onsite'] },
+      { id: 'A5', code: 'A5', title: '葉脈包裝巧克力', enTitle: 'Leaf Vein Packaging', concept: '減塑設計。利用天然葉脈取代塑膠包裝，探討產品生命週期。', specs: '室內 | 2小時 | 30人/場', instructor: '張玉華', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 12 (責任消費)', 'GRI 306 (廢棄物減量)'], color: 'bg-orange-50 border-orange-200', iconColor: 'text-orange-600', badgeColor: 'bg-orange-100 text-orange-700', activeStatuses: ['individual'] },
+      { id: 'A6', code: 'A6', title: '地下探險：土壤生態學習', enTitle: 'Soil Ecology Exploration', concept: '微觀生態。透過試管DIY活動認識土壤層及土壤生成，標示及學習生態活動及環境影響。', specs: '室內 | 2小時 | 30人/場 (需自備手機)', instructor: '梁維軒、陳宏瑋 (儲備: 林裕翔)', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 15 (陸域生態)', 'GRI 304 (生物多樣性)'], color: 'bg-stone-50 border-stone-200', iconColor: 'text-stone-600', badgeColor: 'bg-stone-100 text-stone-700', activeStatuses: ['enterprise'] },
+      { id: 'B1', code: 'B1', title: '里山食農下午茶講堂', enTitle: 'Satoyama High Tea', concept: '產地餐桌・在地食材・食農小講堂・手作茶點。', specs: '室內 | 3小時 | 30人/場', instructor: '陳宏瑋、范振育、連宴瑩、黃志揚等', cost: '材料費 $900/人 | 講師費另計', esg: ['SDG 3 (健康福祉)', 'GRI 204 (在地採購)'], color: 'bg-lime-50 border-lime-200', iconColor: 'text-lime-600', badgeColor: 'bg-lime-100 text-lime-700', activeStatuses: ['suspended'] },
+      { id: 'B2', code: 'B2', title: '殼殼蘭藝', enTitle: 'Shell Orchid Art', concept: '借鏡亞馬遜雨林，將觀賞蘭、檸檬、花生種植的氮及介質利用形成一個有利的循環。', specs: '室內 | 2小時 | 30人/場', instructor: '范振育', cost: '材料費 $450/人 | 講師費 $2,000/時', esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-emerald-50 border-emerald-200', iconColor: 'text-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-700', activeStatuses: ['group', 'enterprise'] },
+      { id: 'B5-1', code: 'B5', title: '好吃香草蘭掛藝', enTitle: 'Vanilla Hanging Art', concept: '利用香草梳枝(芽)廢棄物，開發成掛式紓壓植栽。', specs: '室內 | 2小時 | 30人/場', instructor: '胡博信', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-green-50 border-green-200', iconColor: 'text-green-600', badgeColor: 'bg-green-100 text-green-700', activeStatuses: ['individual', 'group'] },
+      { id: 'B5-2', code: 'B5', title: '金線連微循環懶人種植包', enTitle: 'Jewel Orchid Eco-Bottle', concept: '辦公桌綠化紓壓小物。運用微循環原理免澆水，安全無毒可全株食用。', specs: '室內 | 2小時 | 30人/場', instructor: '陳宏瑋、梁維軒、范振育、林裕翔', cost: '材料費 $300/人 | 講師費 $2,000/時', esg: ['SDG 3 (心理健康)', 'GRI 403 (職場健康)'], color: 'bg-teal-50 border-teal-200', iconColor: 'text-teal-600', badgeColor: 'bg-teal-100 text-teal-700', activeStatuses: ['enterprise'] },
+      { id: 'B6', code: 'B6', title: '惜食酪梨烤布蕾', enTitle: 'Leftover Avocado Crème Brûlée', concept: '利用格外品(醜蔬果)酪梨製作甜點，減少糧食浪費，響應 SDG 12.3。', specs: '室內 | 2小時 | 30人/場', instructor: '林裕翔 (儲備: 陳宏瑋、梁維軒)', cost: '材料費 $200/人 | 講師費 $2,000/時', esg: ['SDG 12.3 (減少糧食浪費)'], color: 'bg-yellow-50 border-yellow-200', iconColor: 'text-yellow-600', badgeColor: 'bg-yellow-100 text-yellow-700', activeStatuses: ['suspended'] },
+      { id: 'B10', code: 'B10', title: '真假蜂蜜搖一搖', enTitle: 'Honey Authenticity Lab', concept: '食安教育。科學實驗分辨真假蜜，認識蜜蜂生態，國產蜂蜜與糧食安全。', specs: '室內 | 2小時 | 30人/場', instructor: '黃志揚 (儲備: 陳宏瑋)', cost: '材料費 $220/人 | 講師費 $2,000/時', esg: ['SDG 2 (消除飢餓)', 'GRI 416 (客戶食安)'], color: 'bg-amber-100 border-amber-300', iconColor: 'text-amber-600', badgeColor: 'bg-amber-200 text-amber-800', activeStatuses: ['individual', 'group', 'enterprise', 'onsite'] }
+    ];
 
-    setToastMessage(`已將「${project.title}」資訊帶入！若系統未自動顯示，請直接「貼上」發送。`);
-    setTimeout(() => setToastMessage(''), 4500);
+    // --- 主程式 ---
+    function App() {
+      const [searchTerm, setSearchTerm] = useState('');
+      const [toastMessage, setToastMessage] = useState('');
 
-    const messengerUrl = `https://www.messenger.com/t/105992485402589/?messaging_source=source%3Apages%3Amessage_shortlink&source_id=1441792&recurring_notification=0&text=${encodeURIComponent(textToCopy)}`;
-    window.open(messengerUrl, '_blank');
-  };
-
-  // 簡易搜尋過濾功能
-  const filteredProjects = projectsData.filter(project => 
-    project.title.includes(searchTerm) || 
-    project.concept.includes(searchTerm) || 
-    project.esg.join(',').includes(searchTerm)
-  );
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800 relative">
-      
-      {/* 頁首 Header */}
-      <header className="max-w-7xl mx-auto mb-10 mt-8 text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900 tracking-tight flex items-center justify-center">
-          <Leaf className="w-10 h-10 mr-3 text-green-600" />
-          永續食農與循環經濟專案總覽
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          在地農業DIY活動結合SDGs、GRI及ESG評鑑，具深度永續意義的實作體驗學習課程，提供企業自評，讓永續概念融入日常生活。
-        </p>
+      const handleInquiryClick = (project) => {
+        const textToCopy = `【課程報名詢問】\n🌱 專案代碼：${project.code}\n📌 專案名稱：${project.title}\n🎯 核心理念：${project.concept}\n⏱️ 規格：${project.specs}\n💰 費用：${project.cost}\n\n您好，我對上述課程非常有興趣，想進一步了解報名與包班細節！`;
         
-        {/* 搜尋列 */}
-        <div className="max-w-md mx-auto mt-6">
-          <input 
-            type="text" 
-            placeholder="搜尋專案名稱、核心理念或 ESG 指標..." 
-            className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition-all"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </header>
+        const textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
 
-      {/* 網頁圖卡網格 Grid */}
-      <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
-          <article 
-            key={project.id} 
-            className={`rounded-2xl border ${project.color} p-6 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col h-full`}
-          >
-            {/* 專案代碼 */}
-            <div className="flex justify-between items-start mb-3">
-              <span className={`inline-block px-2 py-1 text-xs font-bold rounded-md ${project.badgeColor}`}>
-                專案代碼: {project.code}
-              </span>
+        setToastMessage(`已將「${project.title}」資訊帶入！若系統未自動顯示，請直接「貼上」發送。`);
+        setTimeout(() => setToastMessage(''), 4500);
+
+        const messengerUrl = `https://www.messenger.com/t/105992485402589/?messaging_source=source%3Apages%3Amessage_shortlink&source_id=1441792&recurring_notification=0&text=${encodeURIComponent(textToCopy)}`;
+        window.open(messengerUrl, '_blank');
+      };
+
+      const filteredProjects = projectsData.filter(project => 
+        project.title.includes(searchTerm) || 
+        project.concept.includes(searchTerm) || 
+        project.esg.join(',').includes(searchTerm)
+      );
+
+      return (
+        <div className="min-h-screen p-6 font-sans text-gray-800 relative">
+          <header className="max-w-7xl mx-auto mb-10 mt-8 text-center space-y-4">
+            <h1 className="text-4xl font-bold text-gray-900 tracking-tight flex items-center justify-center">
+              <Icons.Leaf className="w-10 h-10 mr-3 text-green-600" />
+              永續食農與循環經濟專案總覽
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              在地農業DIY活動結合SDGs、GRI及ESG評鑑，具深度永續意義的實作體驗學習課程，提供企業自評，讓永續概念融入日常生活。
+            </p>
+            <div className="max-w-md mx-auto mt-6">
+              <input 
+                type="text" 
+                placeholder="搜尋專案名稱、核心理念或 ESG 指標..." 
+                className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
+          </header>
 
-            {/* 標題 */}
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">{project.title}</h2>
-              <p className="text-sm font-medium text-gray-500 italic">{project.enTitle}</p>
-            </div>
-
-            {/* 報名狀態燈號區 */}
-            <div className="mb-5 rounded-lg p-3 border bg-white/50 border-white/60">
-              <div className="text-xs font-bold text-gray-500 mb-2">可報名狀態：</div>
-              <div className="flex flex-wrap gap-2">
-                {allStatuses.map(status => {
-                  const isActive = project.activeStatuses.includes(status.id);
-                  return (
-                    <div 
-                      key={status.id} 
-                      className={`flex items-center px-2 py-1 rounded-md text-[11px] font-bold border transition-all 
-                        ${isActive ? status.activeBg + ' border-transparent' : 'bg-gray-50 border-gray-200'}
-                      `}
-                    >
-                      <span className={`w-2 h-2 rounded-full mr-1.5 ${isActive ? status.activeDot + (!status.noPulse ? ' animate-pulse' : '') : 'bg-gray-300'}`}></span>
-                      <span className={isActive ? status.activeText : 'text-gray-400'}>
-                        {status.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 核心理念 */}
-            <div className="mb-6 flex-grow">
-              <h3 className="flex items-center text-sm font-bold text-gray-700 mb-2">
-                <Target className={`w-4 h-4 mr-1 ${project.iconColor}`} />
-                核心理念
-              </h3>
-              <p className="text-sm text-gray-700 leading-relaxed bg-white/50 p-3 rounded-lg border border-white/60">
-                {project.concept}
-              </p>
-            </div>
-
-            {/* 資訊列表 */}
-            <ul className="space-y-3 mb-6 bg-white/60 rounded-xl p-4">
-              <li className="flex items-start">
-                <Clock className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
-                <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">規格：</strong>{project.specs}</span>
-              </li>
-              <li className="flex items-start">
-                <Mic className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
-                <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">講師：</strong>{project.instructor}</span>
-              </li>
-              <li className="flex items-start">
-                <DollarSign className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
-                <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">費用：</strong>{project.cost}</span>
-              </li>
-            </ul>
-
-            {/* ESG 指標 */}
-            <div className="mt-auto border-t border-black/5 pt-4">
-              <h3 className="flex items-center text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
-                <Globe className="w-4 h-4 mr-1" />
-                SDGs / GRI 對應指標
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {project.esg.map((item, index) => (
-                  <span 
-                    key={index} 
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${project.badgeColor} bg-opacity-70`}
-                  >
-                    {item}
+          <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProjects.map((project) => (
+              <article key={project.id} className={`bg-white rounded-2xl border ${project.color} p-6 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col h-full`}>
+                <div className="flex justify-between items-start mb-3">
+                  <span className={`inline-block px-2 py-1 text-xs font-bold rounded-md ${project.badgeColor}`}>
+                    專案代碼: {project.code}
                   </span>
-                ))}
-              </div>
+                </div>
+                <div className="mb-4">
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">{project.title}</h2>
+                  <p className="text-sm font-medium text-gray-500 italic">{project.enTitle}</p>
+                </div>
+
+                <div className="mb-5 rounded-lg p-3 border bg-gray-50/80 border-gray-200">
+                  <div className="text-xs font-bold text-gray-500 mb-2">可報名狀態：</div>
+                  <div className="flex flex-wrap gap-2">
+                    {allStatuses.map(status => {
+                      const isActive = project.activeStatuses.includes(status.id);
+                      return (
+                        <div key={status.id} className={`flex items-center px-2 py-1 rounded-md text-[11px] font-bold border transition-all ${isActive ? status.activeBg + ' border-transparent' : 'bg-white border-gray-200'}`}>
+                          <span className={`w-2 h-2 rounded-full mr-1.5 ${isActive ? status.activeDot + (!status.noPulse ? ' animate-pulse' : '') : 'bg-gray-300'}`}></span>
+                          <span className={isActive ? status.activeText : 'text-gray-400'}>{status.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mb-6 flex-grow">
+                  <h3 className="flex items-center text-sm font-bold text-gray-700 mb-2">
+                    <Icons.Target className={`w-4 h-4 mr-1 ${project.iconColor}`} /> 核心理念
+                  </h3>
+                  <p className="text-sm text-gray-700 leading-relaxed bg-white/80 p-3 rounded-lg border border-gray-100">{project.concept}</p>
+                </div>
+
+                <ul className="space-y-3 mb-6 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <li className="flex items-start">
+                    <Icons.Clock className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
+                    <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">規格：</strong>{project.specs}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Icons.Mic className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
+                    <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">講師：</strong>{project.instructor}</span>
+                  </li>
+                  <li className="flex items-start">
+                    <Icons.DollarSign className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
+                    <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">費用：</strong>{project.cost}</span>
+                  </li>
+                </ul>
+
+                <div className="mt-auto border-t border-gray-200 pt-4">
+                  <h3 className="flex items-center text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                    <Icons.Globe className="w-4 h-4 mr-1" /> SDGs / GRI 對應指標
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {project.esg.map((item, index) => (
+                      <span key={index} className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${project.badgeColor} bg-opacity-70`}>{item}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <button onClick={() => handleInquiryClick(project)} className="mt-4 w-full flex items-center justify-center py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors shadow-sm">
+                  <Icons.MessageCircle className="w-5 h-5 mr-2" /> 報名詢問 (Messenger)
+                </button>
+              </article>
+            ))}
+          </main>
+
+          {toastMessage && (
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900/90 text-white px-6 py-3 rounded-full shadow-2xl flex items-center z-50 animate-bounce whitespace-nowrap">
+              <Icons.CheckCircle className="w-5 h-5 mr-2 text-green-400" />
+              <span className="text-sm font-medium">{toastMessage}</span>
             </div>
-
-            {/* 報名詢問按鈕 */}
-            <button
-              onClick={() => handleInquiryClick(project)}
-              className="mt-4 w-full flex items-center justify-center py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors shadow-sm"
-            >
-              <MessageCircle className="w-5 h-5 mr-2" />
-              報名詢問 (Messenger)
-            </button>
-          </article>
-        ))}
-      </main>
-
-      {/* 浮動提示訊息 (Toast) */}
-      {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900/90 text-white px-6 py-3 rounded-full shadow-2xl flex items-center z-50 animate-bounce whitespace-nowrap">
-          <CheckCircle className="w-5 h-5 mr-2 text-green-400" />
-          <span className="text-sm font-medium">{toastMessage}</span>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
+      );
+    }
+
+    // 渲染應用程式
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
