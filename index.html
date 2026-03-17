@@ -5,24 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>永續食農與循環經濟專案總覽</title>
   
-  <!-- 載入 Tailwind CSS (排版與顏色) -->
+  <!-- 載入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- 載入 React (核心功能) -->
+  <!-- 載入 React -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   
-  <!-- 載入 Babel (瀏覽器即時編譯 JSX) -->
+  <!-- 載入 Babel -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- 載入 Firebase (Compat 版本，最適合單檔 HTML 引入) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-gray-50">
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState } = React;
+    const { useState, useEffect } = React;
 
-    // --- 內建 SVG 圖示庫 (取代 lucide-react 以免除安裝) ---
+    // ⚠️ 步驟 1：請填入您的 Firebase 設定 (從 Firebase 主控台取得)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // 初始化 Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // --- 內建 SVG 圖示庫 ---
     const Icons = {
+      ImageIcon: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>,
       Clock: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
       Mic: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>,
       DollarSign: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
@@ -44,22 +65,46 @@
     ];
 
     const projectsData = [
-      { id: 'A1', code: 'A1', title: '可食花藝供品盆栽', enTitle: 'Edible Flower Arrangement', concept: '惜食精神。在地當季蔬果・蜂蜜生吐司基底・滿滿心意・活動後可食用。', specs: '室內 | 2小時 | 30人/場', instructor: '黃志揚 (儲備: 陳宏瑋、范振育)', cost: '材料費 $450/人 | 講師費 $2,000/時', esg: ['SDG 2 (消除飢餓)', 'GRI 306'], color: 'bg-rose-50 border-rose-200', iconColor: 'text-rose-500', badgeColor: 'bg-rose-100 text-rose-700', activeStatuses: ['enterprise', 'group', 'onsite'] },
-      { id: 'A4', code: 'A4', title: '森林繫香氛木畫', enTitle: 'Forest Aroma Wood Art', concept: '森林固碳。利用修枝廢材進行創作，結合精油體驗。', specs: '室內 | 2小時 | 30人/場', instructor: '林裕翔 (儲備: 陳宏瑋、梁維軒)', cost: '材料費 $250/人 | 講師費 $2,000/時', esg: ['SDG 15 (陸域生態)', 'GRI 301 (循環物料)'], color: 'bg-amber-50 border-amber-200', iconColor: 'text-amber-600', badgeColor: 'bg-amber-100 text-amber-700', activeStatuses: ['individual', 'group', 'enterprise', 'onsite'] },
-      { id: 'A5', code: 'A5', title: '葉脈包裝巧克力', enTitle: 'Leaf Vein Packaging', concept: '減塑設計。利用天然葉脈取代塑膠包裝，探討產品生命週期。', specs: '室內 | 2小時 | 30人/場', instructor: '張玉華', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 12 (責任消費)', 'GRI 306 (廢棄物減量)'], color: 'bg-orange-50 border-orange-200', iconColor: 'text-orange-600', badgeColor: 'bg-orange-100 text-orange-700', activeStatuses: ['individual'] },
-      { id: 'A6', code: 'A6', title: '地下探險：土壤生態學習', enTitle: 'Soil Ecology Exploration', concept: '微觀生態。透過試管DIY活動認識土壤層及土壤生成，標示及學習生態活動及環境影響。', specs: '室內 | 2小時 | 30人/場 (需自備手機)', instructor: '梁維軒、陳宏瑋 (儲備: 林裕翔)', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 15 (陸域生態)', 'GRI 304 (生物多樣性)'], color: 'bg-stone-50 border-stone-200', iconColor: 'text-stone-600', badgeColor: 'bg-stone-100 text-stone-700', activeStatuses: ['enterprise'] },
-      { id: 'B1', code: 'B1', title: '里山食農下午茶講堂', enTitle: 'Satoyama High Tea', concept: '產地餐桌・在地食材・食農小講堂・手作茶點。', specs: '室內 | 3小時 | 30人/場', instructor: '陳宏瑋、范振育、連宴瑩、黃志揚等', cost: '材料費 $900/人 | 講師費另計', esg: ['SDG 3 (健康福祉)', 'GRI 204 (在地採購)'], color: 'bg-lime-50 border-lime-200', iconColor: 'text-lime-600', badgeColor: 'bg-lime-100 text-lime-700', activeStatuses: ['suspended'] },
-      { id: 'B2', code: 'B2', title: '殼殼蘭藝', enTitle: 'Shell Orchid Art', concept: '借鏡亞馬遜雨林，將觀賞蘭、檸檬、花生種植的氮及介質利用形成一個有利的循環。', specs: '室內 | 2小時 | 30人/場', instructor: '范振育', cost: '材料費 $450/人 | 講師費 $2,000/時', esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-emerald-50 border-emerald-200', iconColor: 'text-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-700', activeStatuses: ['group', 'enterprise'] },
-      { id: 'B5-1', code: 'B5', title: '好吃香草蘭掛藝', enTitle: 'Vanilla Hanging Art', concept: '利用香草梳枝(芽)廢棄物，開發成掛式紓壓植栽。', specs: '室內 | 2小時 | 30人/場', instructor: '胡博信', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-green-50 border-green-200', iconColor: 'text-green-600', badgeColor: 'bg-green-100 text-green-700', activeStatuses: ['individual', 'group'] },
-      { id: 'B5-2', code: 'B5', title: '金線連微循環懶人種植包', enTitle: 'Jewel Orchid Eco-Bottle', concept: '辦公桌綠化紓壓小物。運用微循環原理免澆水，安全無毒可全株食用。', specs: '室內 | 2小時 | 30人/場', instructor: '陳宏瑋、梁維軒、范振育、林裕翔', cost: '材料費 $300/人 | 講師費 $2,000/時', esg: ['SDG 3 (心理健康)', 'GRI 403 (職場健康)'], color: 'bg-teal-50 border-teal-200', iconColor: 'text-teal-600', badgeColor: 'bg-teal-100 text-teal-700', activeStatuses: ['enterprise'] },
-      { id: 'B6', code: 'B6', title: '惜食酪梨烤布蕾', enTitle: 'Leftover Avocado Crème Brûlée', concept: '利用格外品(醜蔬果)酪梨製作甜點，減少糧食浪費，響應 SDG 12.3。', specs: '室內 | 2小時 | 30人/場', instructor: '林裕翔 (儲備: 陳宏瑋、梁維軒)', cost: '材料費 $200/人 | 講師費 $2,000/時', esg: ['SDG 12.3 (減少糧食浪費)'], color: 'bg-yellow-50 border-yellow-200', iconColor: 'text-yellow-600', badgeColor: 'bg-yellow-100 text-yellow-700', activeStatuses: ['suspended'] },
-      { id: 'B10', code: 'B10', title: '真假蜂蜜搖一搖', enTitle: 'Honey Authenticity Lab', concept: '食安教育。科學實驗分辨真假蜜，認識蜜蜂生態，國產蜂蜜與糧食安全。', specs: '室內 | 2小時 | 30人/場', instructor: '黃志揚 (儲備: 陳宏瑋)', cost: '材料費 $220/人 | 講師費 $2,000/時', esg: ['SDG 2 (消除飢餓)', 'GRI 416 (客戶食安)'], color: 'bg-amber-100 border-amber-300', iconColor: 'text-amber-600', badgeColor: 'bg-amber-200 text-amber-800', activeStatuses: ['individual', 'group', 'enterprise', 'onsite'] }
+      { id: 'A1', code: 'A1', title: '可食花藝供品盆栽', enTitle: 'Edible Flower Arrangement', concept: '惜食精神。在地當季蔬果・蜂蜜生吐司基底・滿滿心意・活動後可食用。', specs: '室內 | 2小時 | 30人/場', instructor: '黃志揚 (儲備: 陳宏瑋、范振育)', cost: '材料費 $450/人 | 講師費 $2,000/時', esg: ['SDG 2 (消除飢餓)', 'GRI 306'], color: 'bg-rose-50 border-rose-200', iconColor: 'text-rose-500', badgeColor: 'bg-rose-100 text-rose-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 6~9月、11~2月', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true, imageUrl: 'Gemini_Generated_Image_b0kyrdb0kyrdb0ky.jpg' },
+      { id: 'A2', code: 'A2', title: '森林繫香氛木畫', enTitle: 'Forest Aroma Wood Art', concept: '森林固碳。利用修枝廢材進行創作，結合精油體驗。', specs: '室內 | 2小時 | 30人/場', instructor: '林裕翔 (儲備: 陳宏瑋、梁維軒)', cost: '材料費 $250/人 | 講師費 $2,000/時', esg: ['SDG 15 (陸域生態)', 'GRI 301 (循環物料)'], color: 'bg-amber-50 border-amber-200', iconColor: 'text-amber-600', badgeColor: 'bg-amber-100 text-amber-700', activeStatuses: ['individual', 'group', 'enterprise', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 8~2月', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'A3', code: 'A3', title: '葉脈包裝巧克力', enTitle: 'Leaf Vein Packaging', concept: '減塑設計。利用天然葉脈取代塑膠包裝，探討產品生命週期。', specs: '室內 | 2小時 | 30人/場', instructor: '張玉華', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 12 (責任消費)', 'GRI 306 (廢棄物減量)'], color: 'bg-orange-50 border-orange-200', iconColor: 'text-orange-600', badgeColor: 'bg-orange-100 text-orange-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 全年', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'A4', code: 'A4', title: '地下探險：土壤生態學習', enTitle: 'Soil Ecology Exploration', concept: '微觀生態。透過試管DIY活動認識土壤層及土壤生成，標示及學習生態活動及環境影響。', specs: '室內 | 2小時 | 30人/場 (需自備手機)', instructor: '梁維軒、陳宏瑋 (儲備: 林裕翔)', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 15 (陸域生態)', 'GRI 304 (生物多樣性)'], color: 'bg-stone-50 border-stone-200', iconColor: 'text-stone-600', badgeColor: 'bg-stone-100 text-stone-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 全年', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'A5', code: 'A5', title: '真假蜂蜜搖一搖', enTitle: 'Honey Authenticity Lab', concept: '食安教育。科學實驗分辨真假蜜，認識蜜蜂生態，國產蜂蜜與糧食安全。', specs: '室內 | 2小時 | 30人/場', instructor: '黃志揚 (儲備: 陳宏瑋)', cost: '材料費 $220/人 | 講師費 $2,000/時', esg: ['SDG 2 (消除飢餓)', 'GRI 416 (客戶食安)'], color: 'bg-amber-100 border-amber-300', iconColor: 'text-amber-600', badgeColor: 'bg-amber-200 text-amber-800', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 6~9月、11~2月', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'A6', code: 'A6', title: '惜食酪梨烤布蕾', enTitle: 'Leftover Avocado Crème Brûlée', concept: '利用格外品(醜蔬果)酪梨製作甜點，減少糧食浪費，響應 SDG 12.3。', specs: '室內 | 2小時 | 30人/場', instructor: '林裕翔 (儲備: 陳宏瑋、梁維軒)', cost: '材料費 $200/人 | 講師費 $2,000/時', esg: ['SDG 12.3 (減少糧食浪費)'], color: 'bg-yellow-50 border-yellow-200', iconColor: 'text-yellow-600', badgeColor: 'bg-yellow-100 text-yellow-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 8月-11月', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'A7', code: 'A7', title: '香莢蘭掛藝(循環經濟園藝紓壓)', enTitle: 'Vanilla Hanging Art', concept: '利用香草梳枝(芽)廢棄物，開發成掛式紓壓植栽。', specs: '室內 | 2小時 | 30人/場', instructor: '胡博信', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-green-50 border-green-200', iconColor: 'text-green-600', badgeColor: 'bg-green-100 text-green-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 9月-12月', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'B1', code: 'B1', title: '殼殼蘭藝農業循環經濟', enTitle: 'Shell Orchid Art', concept: '借鏡亞馬遜雨林，將觀賞蘭、檸檬、花生種植的氮及介質利用形成一個有利的循環。', specs: '室內 | 2小時 | 30人/場', instructor: '范振育', cost: '材料費 $450/人 | 講師費 $2,000/時', esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-emerald-50 border-emerald-200', iconColor: 'text-emerald-600', badgeColor: 'bg-emerald-100 text-emerald-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 5~2月', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'B2', code: 'B2', title: '香莢蘭掛藝(循環經濟園藝紓壓)', enTitle: 'Vanilla Hanging Art', concept: '利用香草梳枝(芽)廢棄物，開發成掛式紓壓植栽。', specs: '室內 | 2小時 | 30人/場', instructor: '胡博信', cost: '材料費 $350/人 | 講師費 $2,000/時', esg: ['SDG 12 (永續生產)', 'GRI 301 (循環物料)'], color: 'bg-green-50 border-green-200', iconColor: 'text-green-600', badgeColor: 'bg-green-100 text-green-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 9月-12月', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'B3', code: 'B3', title: '金線連微循環懶人種植包', enTitle: 'Jewel Orchid Eco-Bottle', concept: '金線連食農教育與林下經濟解讀，DIY手做辦公桌綠化紓壓小物。運用微循環原理免澆水，養植期9-10個月，安全無毒可全株食用。', specs: '室內 | 2小時 | 30人/場', instructor: '陳宏瑋、梁維軒、范振育、林裕翔', cost: '材料費 $300/人 | 講師費 $2,000/時', esg: ['SDG 3 (心理健康)', 'GRI 403 (職場健康)', 'SROI (✓) (指令教育農場 1:1.95，雨社山下農場 1:1.58，阿爾喜農場 1:1.95，湧建梅園 1:2.66)'], color: 'bg-teal-50 border-teal-200', iconColor: 'text-teal-600', badgeColor: 'bg-teal-100 text-teal-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 全年', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'C1', code: 'C1', title: '里 multi-line text 食農下午茶講堂', enTitle: 'Satoyama High Tea', concept: '產地到餐桌・透過食農小講堂認識在地當季食材與食農教育・創意手作茶點一起動手做度過愉快的下午。', specs: '室內 | 3小時 | 30人/場', instructor: '陳宏瑋、范振育、連宴瑩、黃志揚等', cost: '材料費 $950/人 | 含講師費', esg: ['SDG 3 (健康福祉)', 'GRI 204 (在地採購)', 'SROI (✓) (里山餐桌 1 : 3.4)'], color: 'bg-lime-50 border-lime-200', iconColor: 'text-lime-600', badgeColor: 'bg-lime-100 text-lime-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 依選擇內容安排講師', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true },
+      { id: 'C2', code: 'C2', title: '食農教育大地遊戲', enTitle: 'Food & Agriculture Outdoor Game', concept: '在地農產品食農教育闖關學習體驗，以五感體驗認識在地農產品，由種植該農產品的青農設計題目進行體驗與解答，完成闖關，獲得獎勵品(特製美食) 適合企業日辦理', specs: '室外 | 3.5小時 | 50-150人/場', instructor: '水里青農、國姓青農 (基本闖關6站)', cost: '材料費 $650/人 | 含講師費', esg: ['SDG 3 (健康福祉)', 'GRI 204 (在地採購)'], color: 'bg-sky-50 border-sky-200', iconColor: 'text-sky-600', badgeColor: 'bg-sky-100 text-sky-700', activeStatuses: ['enterprise', 'group', 'onsite'], customNotices: ['1. 接受機關/企業/團體指定地點', '2. 可辦理期間(除去農忙期): 依選擇闖關站', '3. 南投以外縣市車馬費另計'], hideDefaultStatuses: true }
     ];
 
-    // --- 主程式 ---
     function App() {
       const [searchTerm, setSearchTerm] = useState('');
       const [toastMessage, setToastMessage] = useState('');
+      const [dynamicData, setDynamicData] = useState({});
+
+      // 載入與監聽 Firebase 資料
+      useEffect(() => {
+        // 如果沒有填寫 API KEY，就不執行連線，直接用預設靜態資料
+        if (firebaseConfig.apiKey === "YOUR_API_KEY") return;
+
+        const unsubscribe = db.collection('projects').onSnapshot((snapshot) => {
+          const dataMap = {};
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            dataMap[doc.id] = {
+              activeStatuses: data.activeStatuses || [],
+              imageUrl: data.imageUrl || '' // 從資料庫讀取圖片網址
+            };
+          });
+          setDynamicData(dataMap);
+        }, (error) => {
+          console.warn("無法連接 Firebase，將使用預設資料:", error);
+        });
+
+        return () => unsubscribe();
+      }, []);
 
       const handleInquiryClick = (project) => {
         const textToCopy = `【課程報名詢問】\n🌱 專案代碼：${project.code}\n📌 專案名稱：${project.title}\n🎯 核心理念：${project.concept}\n⏱️ 規格：${project.specs}\n💰 費用：${project.cost}\n\n您好，我對上述課程非常有興趣，想進一步了解報名與包班細節！`;
@@ -106,71 +151,105 @@
           </header>
 
           <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map((project) => (
-              <article key={project.id} className={`bg-white rounded-2xl border ${project.color} p-6 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col h-full`}>
-                <div className="flex justify-between items-start mb-3">
-                  <span className={`inline-block px-2 py-1 text-xs font-bold rounded-md ${project.badgeColor}`}>
-                    專案代碼: {project.code}
-                  </span>
-                </div>
-                <div className="mb-4">
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">{project.title}</h2>
-                  <p className="text-sm font-medium text-gray-500 italic">{project.enTitle}</p>
-                </div>
+            {filteredProjects.map((project) => {
+              // 判斷 Firebase 是否有資料，有則覆蓋，無則用預設
+              const finalStatuses = dynamicData[project.id]?.activeStatuses ? dynamicData[project.id].activeStatuses : project.activeStatuses;
+              
+              // 優先讀取 Firebase 網址，若無則讀取本機設定的靜態圖片檔名
+              const imageUrl = dynamicData[project.id]?.imageUrl || project.imageUrl || '';
 
-                <div className="mb-5 rounded-lg p-3 border bg-gray-50/80 border-gray-200">
-                  <div className="text-xs font-bold text-gray-500 mb-2">可報名狀態：</div>
-                  <div className="flex flex-wrap gap-2">
-                    {allStatuses.map(status => {
-                      const isActive = project.activeStatuses.includes(status.id);
-                      return (
-                        <div key={status.id} className={`flex items-center px-2 py-1 rounded-md text-[11px] font-bold border transition-all ${isActive ? status.activeBg + ' border-transparent' : 'bg-white border-gray-200'}`}>
-                          <span className={`w-2 h-2 rounded-full mr-1.5 ${isActive ? status.activeDot + (!status.noPulse ? ' animate-pulse' : '') : 'bg-gray-300'}`}></span>
-                          <span className={isActive ? status.activeText : 'text-gray-400'}>{status.label}</span>
-                        </div>
-                      );
-                    })}
+              return (
+                <article key={project.id} className={`bg-white rounded-2xl border ${project.color} p-6 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col h-full`}>
+                  <div className="flex justify-between items-start mb-3">
+                    <span className={`inline-block px-3 py-1.5 text-sm font-bold rounded-md ${project.badgeColor}`}>
+                      專案代碼: {project.code}
+                    </span>
                   </div>
-                </div>
-
-                <div className="mb-6 flex-grow">
-                  <h3 className="flex items-center text-sm font-bold text-gray-700 mb-2">
-                    <Icons.Target className={`w-4 h-4 mr-1 ${project.iconColor}`} /> 核心理念
-                  </h3>
-                  <p className="text-sm text-gray-700 leading-relaxed bg-white/80 p-3 rounded-lg border border-gray-100">{project.concept}</p>
-                </div>
-
-                <ul className="space-y-3 mb-6 bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <li className="flex items-start">
-                    <Icons.Clock className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
-                    <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">規格：</strong>{project.specs}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Icons.Mic className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
-                    <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">講師：</strong>{project.instructor}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Icons.DollarSign className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
-                    <span className="text-sm text-gray-700"><strong className="font-semibold text-gray-900">費用：</strong>{project.cost}</span>
-                  </li>
-                </ul>
-
-                <div className="mt-auto border-t border-gray-200 pt-4">
-                  <h3 className="flex items-center text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
-                    <Icons.Globe className="w-4 h-4 mr-1" /> SDGs / GRI 對應指標
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {project.esg.map((item, index) => (
-                      <span key={index} className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${project.badgeColor} bg-opacity-70`}>{item}</span>
-                    ))}
+                  <div className="mb-4">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-1">{project.title}</h2>
+                    <p className="text-base font-medium text-gray-500 italic">{project.enTitle}</p>
                   </div>
-                </div>
 
-                <button onClick={() => handleInquiryClick(project)} className="mt-4 w-full flex items-center justify-center py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors shadow-sm">
-                  <Icons.MessageCircle className="w-5 h-5 mr-2" /> 報名詢問 (Messenger)
-                </button>
-              </article>
-            ))}
+                  {/* 🖼️ 新增：圖片顯示區塊 (連線至 Firebase) */}
+                  <div className="mb-5 relative w-full h-48 bg-gray-100/80 rounded-xl overflow-hidden border border-gray-100 group flex items-center justify-center">
+                    {imageUrl ? (
+                      <img src={imageUrl} alt={project.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    ) : (
+                      <div className="flex flex-col items-center text-gray-400">
+                         <Icons.ImageIcon className="w-10 h-10 mb-2 opacity-40" />
+                         <span className="text-xs font-bold tracking-wider">圖片準備中</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-5 rounded-lg p-3 border bg-gray-50/80 border-gray-200">
+                    <div className="text-sm font-bold text-gray-500 mb-2">可報名狀態：</div>
+                    
+                    {!project.hideDefaultStatuses && (
+                      <div className="flex flex-wrap gap-2">
+                        {allStatuses.map(status => {
+                          const isActive = finalStatuses.includes(status.id);
+                          return (
+                            <div key={status.id} className={`flex items-center px-2.5 py-1.5 rounded-md text-xs font-bold border transition-all ${isActive ? status.activeBg + ' border-transparent' : 'bg-white border-gray-200'}`}>
+                              <span className={`w-2 h-2 rounded-full mr-1.5 ${isActive ? status.activeDot + (!status.noPulse ? ' animate-pulse' : '') : 'bg-gray-300'}`}></span>
+                              <span className={isActive ? status.activeText : 'text-gray-400'}>{status.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    
+                    {project.customNotices && (
+                      <div className={`space-y-1.5 ${!project.hideDefaultStatuses ? 'mt-3 pt-3 border-t border-gray-200' : ''}`}>
+                        {project.customNotices.map((notice, idx) => (
+                          <div key={idx} className={`flex items-start text-xs font-bold ${project.iconColor}`}>
+                            <Icons.Info className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5" />
+                            <span>{notice}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-6 flex-grow">
+                    <h3 className="flex items-center text-base font-bold text-gray-700 mb-2">
+                      <Icons.Target className={`w-5 h-5 mr-1.5 ${project.iconColor}`} /> 核心理念
+                    </h3>
+                    <p className="text-base text-gray-700 leading-relaxed bg-white/80 p-4 rounded-lg border border-gray-100">{project.concept}</p>
+                  </div>
+
+                  <ul className="space-y-4 mb-6 bg-gray-50 rounded-xl p-5 border border-gray-100">
+                    <li className="flex items-start">
+                      <Icons.Clock className={`w-5 h-5 mr-2.5 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
+                      <span className="text-base text-gray-700"><strong className="font-semibold text-gray-900">規格：</strong>{project.specs}</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Icons.Mic className={`w-5 h-5 mr-2.5 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
+                      <span className="text-base text-gray-700"><strong className="font-semibold text-gray-900">講師：</strong>{project.instructor}</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Icons.DollarSign className={`w-5 h-5 mr-2.5 mt-0.5 flex-shrink-0 ${project.iconColor}`} />
+                      <span className="text-base text-gray-700"><strong className="font-semibold text-gray-900">費用：</strong>{project.cost}</span>
+                    </li>
+                  </ul>
+
+                  <div className="mt-auto border-t border-gray-200 pt-5">
+                    <h3 className="flex items-center text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">
+                      <Icons.Globe className="w-4 h-4 mr-1.5" /> SDGs / GRI 對應指標
+                    </h3>
+                    <div className="flex flex-wrap gap-2.5">
+                      {project.esg.map((item, index) => (
+                        <span key={index} className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${project.badgeColor} bg-opacity-70`}>{item}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button onClick={() => handleInquiryClick(project)} className="mt-5 w-full flex items-center justify-center py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold transition-colors shadow-sm">
+                    <Icons.MessageCircle className="w-5 h-5 mr-2" /> 報名詢問 (Messenger)
+                  </button>
+                </article>
+              );
+            })}
           </main>
 
           {toastMessage && (
@@ -183,7 +262,6 @@
       );
     }
 
-    // 渲染應用程式
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
